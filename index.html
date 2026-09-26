@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poofi4u - Peaceful Edition</title>
+<!-- Google Fonts: Plus Jakarta Sans for clean serenity -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- FontAwesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #f7f5f0; /* Warm, peaceful linen background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4a4543;
+}
+
+/* NAVBAR */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 32px;
+    background: rgba(247, 245, 240, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(215, 210, 200, 0.6);
+    z-index: 1000;
+}
+
+.nav-brand {
+    font-size: 16px;
+    font-weight: 600;
+    color: #5c5350;
+    letter-spacing: 0.5px;
+}
+
+.nav-right {
+    position: relative;
+}
+
+.setting-btn {
+    border: 1px solid #dcd6cd;
+    background: #ffffff;
+    color: #6b625e;
+    padding: 7px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+
+.setting-btn:hover {
+    background: #f2ece4;
+    border-color: #cbc3b7;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 45px;
+    background: #ffffff;
+    border: 1px solid #e2ddd5;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    width: 150px;
+    display: none;
+    flex-direction: column;
+    padding: 6px;
+    z-index: 1001;
+}
+
+.dropdown-menu.show {
+    display: flex;
+}
+
+.dropdown-item {
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #5c5350;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: #f7f5f0;
+}
+
+/* GAME WINDOW */
+.game {
+    position: relative;
+    z-index: 5;
+    width: 620px;
+    max-width: 92vw;
+    padding: 32px;
+    background: #ffffff;
+    border: 1px solid #eae5dc;
+    box-shadow: 0 20px 40px rgba(110, 100, 90, 0.06);
+    border-radius: 24px;
+    transition: border-color 0.3s ease;
+}
+
+.game.danger-flash {
+    border-color: #e28a8a !important;
+    animation: gentle-shake 0.4s ease both;
+}
+
+@keyframes gentle-shake {
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+
+/* HEADER CONTROLS BAR */
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    font-size: 13px;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-group span {
+    color: #7a706b;
+    font-weight: 500;
+}
+
+.disk-select-display {
+    background: #f7f5f0;
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: 1px solid #e8e3d9;
+    font-weight: 600;
+    color: #5c5350;
+}
+
+button {
+    border: 1px solid #dcd6cd;
+    background: #ffffff;
+    color: #6b625e;
+    padding: 6px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+}
+
+button:hover {
+    background: #f7f5f0;
+    border-color: #cbc3b7;
+}
+
+.reset-btn {
+    background: #6c8072; /* Calm sage green */
+    color: white;
+    border-color: #6c8072;
+}
+
+.reset-btn:hover {
+    background: #5b6d60;
+}
+
+/* BOARD */
+.board {
+    height: 190px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 16px;
+    padding: 0 16px;
+    background: #faf8f5;
+    border-radius: 16px;
+    border: 1px solid #f0ece4;
+}
+
+/* TOWERS */
+.tower {
+    position: relative;
+    width: 30%;
+    height: 150px;
+    cursor: pointer;
+}
+
+/* Horizontal Base Line */
+.tower::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 3px;
+    background: #dcd6cd;
+    bottom: 0;
+    left: 0;
+    border-radius: 3px;
+}
+
+/* Vertical Pillar */
+.tower::after {
+    content: "";
+    position: absolute;
+    width: 3px;
+    height: 130px;
+    background: #dcd6cd;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    border-radius: 3px;
+}
+
+.tower-label-text {
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 500;
+    color: #7a706b;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    padding: 2px 10px;
+    border: 1px solid #e8e3d9;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+/* TOKENS (Calming Earthy / Muted Pastels) */
+.disks {
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 130px;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: flex-start;
+    z-index: 2;
+}
+
+.disk {
+    height: 20px;
+    margin-top: 3px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5c5350;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    transition: transform 0.2s ease;
+}
+
+.disk:hover {
+    transform: translateY(-2px);
+}
+
+.disk-1 { width: 48px; background: #e3ede6; border: 1px solid #c7d9cc; }
+.disk-2 { width: 72px; background: #d7e4db; border: 1px solid #b7ccbf; }
+.disk-3 { width: 96px; background: #f2e6df; border: 1px solid #e2cbc0; }
+.disk-4 { width: 120px; background: #faede3; border: 1px solid #ecd5c4; }
+.disk-5 { width: 144px; background: #e6edf2; border: 1px solid #cbd7e2; }
+
+/* FOOTER BAR */
+.footer-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    font-size: 13px;
+    color: #8c827c;
+}
+
+/* SELECTED DISK & GUIDE ARROW */
+.disk.selected-disk {
+    transform: translateY(-6px);
+    border-color: #8c7a6b;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    z-index: 10;
+}
+
+.guide-arrow {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 100;
+    display: none;
+    color: #8c7a6b;
+}
+
+.guide-arrow.active {
+    display: block;
+}
+
+.guide-arrow path {
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 4 6;
+    opacity: 0.6;
+}
+
+/* VICTORY MODAL */
+.victory-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(90, 85, 80, 0.3);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.victory-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.victory-card {
+    background: #ffffff;
+    border: 1px solid #eae5dc;
+    padding: 32px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    width: 320px;
+}
+
+.victory-card h2 {
+    font-size: 18px;
+    color: #5c5350;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.victory-card p {
+    font-size: 13px;
+    color: #8c827c;
+    margin-bottom: 24px;
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="nav-brand"><i class="fa-solid fa-leaf" style="color: #6c8072;"></i> Poofi4u</div>
+    <div class="nav-right">
+        <button class="setting-btn" id="settingBtn"><i class="fa-solid fa-gear"></i> Settings</button>
+        <div class="dropdown-menu" id="dropdownMenu">
+            <button class="dropdown-item" onclick="openPayment()"><i class="fa-solid fa-wallet"></i> Payment</button>
+        </div>
+    </div>
+</nav>
+
+<!-- GAME WINDOW -->
+<div class="game" id="game">
+    <!-- HEADER BAR -->
+    <div class="header-bar">
+        <div class="control-group">
+            <span>Disks:</span>
+            <div class="disk-select-display" id="diskCount">3</div>
+            <button onclick="removeDisk()"><i class="fa-solid fa-minus"></i></button>
+            <button onclick="addDisk()"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div class="control-group">
+            <span id="movesText">Moves: 0</span>
+        </div>
+        <div class="control-group">
+            <button onclick="resetGame()" class="reset-btn"><i class="fa-solid fa-rotate-right"></i> Restart</button>
+        </div>
+    </div>
+
+    <!-- BOARD -->
+    <div class="board">
+        <div class="tower" data-tower="0">
+            <div class="tower-label-text"><i class="fa-solid fa-user" style="color: #8c7a6b;"></i> me</div>
+            <div class="disks"></div>
+        </div>
+        <div class="tower" data-tower="1">
+            <div class="tower-label-text"><i class="fa-solid fa-heart" style="color: #c48b8b;"></i> poofi4u</div>
+            <div class="disks"></div>
+        </div>
+        <div class="tower" data-tower="2">
+            <div class="tower-label-text"><i class="fa-solid fa-seedling" style="color: #6c8072;"></i> someoneloved</div>
+            <div class="disks"></div>
+        </div>
+    </div>
+
+    <!-- FOOTER BAR -->
+    <div class="footer-bar">
+        <div id="message">Click a token to begin your journey.</div>
+        <div id="minMovesText">Min Moves: 7</div>
+    </div>
+</div>
+
+<!-- Solid Triangle Guide Arrow -->
+<svg id="guideArrow" class="guide-arrow" aria-hidden="true">
+    <defs>
+        <marker id="arrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+            <polygon points="0 1, 8 4, 0 7" fill="currentColor"></polygon>
+        </marker>
+    </defs>
+    <path id="guidePath" d="M 0 0 Q 0 0 0 0" marker-end="url(#arrowHead)"></path>
+</svg>
+
+<!-- Victory Modal -->
+<div class="victory-modal" id="victoryModal">
+    <div class="victory-card">
+        <h2>Harmony Achieved 🌿</h2>
+        <p id="victoryText">You finished the puzzle.</p>
+        <button onclick="closeVictoryModal()"><i class="fa-solid fa-play"></i> Play Again</button>
+    </div>
+</div>
+
+<script>
+const settingBtn = document.getElementById("settingBtn");
+const dropdownMenu = document.getElementById("dropdownMenu");
+
+settingBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdownMenu.classList.toggle("show");
+});
+
+window.addEventListener("click", () => {
+    dropdownMenu.classList.remove("show");
+});
+
+function openPayment() {
+    alert("Opening payment gateway...");
+}
+
+let numberOfDisks = 3;
+const MIN_DISKS = 1;
+const MAX_DISKS = 5;
+let towers = [[], [], []];
+let selectedTower = null;
+let moves = 0;
+
+function startGame() {
+    towers = [[], [], []];
+    selectedTower = null;
+    moves = 0;
+    for (let disk = numberOfDisks; disk >= 1; disk--) {
+        towers[0].push(disk);
+    }
+    updateUI();
+}
+
+function updateUI() {
+    const towerElements = document.querySelectorAll(".tower");
+    towerElements.forEach((towerElement, towerIndex) => {
+        const container = towerElement.querySelector(".disks");
+        container.innerHTML = "";
+
+        towers[towerIndex].forEach((disk, diskIndex) => {
+            const element = document.createElement("div");
+            element.className = "disk disk-" + disk;
+            element.textContent = disk;
+
+            const isTopDisk = diskIndex === towers[towerIndex].length - 1;
+            if (selectedTower === towerIndex && isTopDisk) {
+                element.classList.add("selected-disk");
+            }
+            container.appendChild(element);
+        });
+    });
+
+    document.getElementById("movesText").textContent = "Moves: " + moves;
+    document.getElementById("diskCount").textContent = numberOfDisks;
+    document.getElementById("minMovesText").textContent = "Min Moves: " + (Math.pow(2, numberOfDisks) - 1);
+    updateGuideArrow();
+}
+
+document.querySelectorAll(".tower").forEach(tower => {
+    tower.addEventListener("click", () => {
+        const index = Number(tower.dataset.tower);
+        handleTowerClick(index);
+    });
+});
+
+function handleTowerClick(index) {
+    if (selectedTower === null) {
+        if (towers[index].length === 0) {
+            document.getElementById("message").textContent = "This space is empty.";
+            return;
+        }
+        selectedTower = index;
+        document.getElementById("message").textContent = "Token lifted. Choose your destination.";
+        updateUI();
+        return;
+    }
+
+    if (selectedTower === index) {
+        selectedTower = null;
+        document.getElementById("message").textContent = "Selection released.";
+        updateUI();
+        return;
+    }
+
+    moveDisk(selectedTower, index);
+}
+
+function moveDisk(from, to) {
+    const source = towers[from];
+    const destination = towers[to];
+    const disk = source[source.length - 1];
+    const top = destination[destination.length - 1];
+
+    if (top !== undefined && disk > top) {
+        triggerError();
+        return;
+    }
+
+    source.pop();
+    destination.push(disk);
+    moves++;
+    selectedTower = null;
+
+    document.getElementById("message").textContent = "Placed gently.";
+    updateUI();
+    checkWin();
+}
+
+function triggerError() {
+    const gameEl = document.getElementById("game");
+    const msgEl = document.getElementById("message");
+    gameEl.classList.add("danger-flash");
+    msgEl.textContent = "A larger token cannot rest on a smaller one.";
+
+    setTimeout(() => {
+        gameEl.classList.remove("danger-flash");
+        msgEl.textContent = "Selection reset.";
+        selectedTower = null;
+        updateUI();
+    }, 600);
+}
+
+function checkWin() {
+    if (towers[2].length === numberOfDisks) {
+        const modal = document.getElementById("victoryModal");
+        document.getElementById("victoryText").textContent = `Completed peacefully in ${moves} moves.`;
+        modal.classList.add("show");
+    }
+}
+
+function resetGame() {
+    startGame();
+    document.getElementById("message").textContent = "Everything is reset.";
+    document.getElementById("victoryModal").classList.remove("show");
+}
+
+function addDisk() {
+    if (numberOfDisks >= MAX_DISKS) return;
+    numberOfDisks++;
+    startGame();
+}
+
+function removeDisk() {
+    if (numberOfDisks <= MIN_DISKS) return;
+    numberOfDisks--;
+    startGame();
+}
+
+function closeVictoryModal() {
+    document.getElementById("victoryModal").classList.remove("show");
+    resetGame();
+}
+
+/* GUIDE ARROW */
+const guideArrow = document.getElementById("guideArrow");
+const guidePath = document.getElementById("guidePath");
+let pointerX = window.innerWidth / 2;
+let pointerY = window.innerHeight / 2;
+
+document.addEventListener("pointermove", event => {
+    pointerX = event.clientX;
+    pointerY = event.clientY;
+    updateGuideArrow();
+}, { passive: true });
+
+function updateGuideArrow() {
+    if (selectedTower === null) {
+        guideArrow.classList.remove("active");
+        return;
+    }
+
+    const selectedDisk = document.querySelector(".tower .selected-disk");
+    if (!selectedDisk) {
+        guideArrow.classList.remove("active");
+        return;
+    }
+
+    const gameRect = document.getElementById("game").getBoundingClientRect();
+    
+    let targetX = Math.max(gameRect.left + 15, Math.min(pointerX, gameRect.right - 15));
+    let targetY = Math.max(gameRect.top + 15, Math.min(pointerY, gameRect.bottom - 15));
+
+    const rect = selectedDisk.getBoundingClientRect();
+    const startX = rect.right;
+    const startY = rect.top + rect.height / 2;
+    const dx = targetX - startX;
+    const dy = targetY - startY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < 25) {
+        guideArrow.classList.remove("active");
+    } else {
+        const gap = 16;
+        const endX = targetX - (dx / distance) * gap;
+        const endY = targetY - (dy / distance) * gap;
+        const controlX = (startX + endX) / 2;
+        const controlY = Math.min(startY, endY) - Math.max(25, Math.abs(dx) * 0.1);
+
+        const pathData = `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`;
+        guidePath.setAttribute("d", pathData);
+        guideArrow.classList.add("active");
+    }
+}
+
+startGame();
+</script>
+</body>
+</html>
