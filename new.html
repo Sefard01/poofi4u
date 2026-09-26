@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Stack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes moveBlock {
+            from {
+                left: 10%
+            }
+
+            to {
+                left: 90%
+            }
+        }
+        .moving {
+            animation: moveBlock var(--speed) linear infinite alternate
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-5">
+            <h1 class="text-4xl font-black">PERFECT <span class="text-cyan-400">STACK</span></h1>
+            <p class="text-slate-400 text-sm mt-2">Stack as many blocks as possible in 60 seconds</p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
+                <p class="text-xs text-slate-500">SCORE</p>
+                <p id="score" class="text-2xl font-bold">0</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
+                <p class="text-xs text-slate-500">TIME</p>
+                <p id="timer" class="text-2xl font-bold text-cyan-400">60</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
+                <p class="text-xs text-slate-500">BEST</p>
+                <p id="best" class="text-2xl font-bold">0</p>
+            </div>
+        </div>
+        <div id="game"
+            class="relative h-[520px] overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 select-none touch-none">
+            <div id="countdown" class="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/95">
+                <div class="text-center">
+                    <p class="text-slate-400 text-sm mb-3">GET READY</p>
+                    <div id="countNumber" class="text-8xl font-black text-cyan-400">3</div>
+                </div>
+            </div>
+            <div id="gameOver" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-slate-950/95">
+                <div class="text-center">
+                    <p class="text-red-400 font-bold tracking-widest text-sm">GAME OVER</p>
+                    <h2 class="text-4xl font-black mt-2">TIME'S UP</h2>
+                    <p class="text-slate-400 mt-5">Your Score</p>
+                    <p id="finalScore" class="text-6xl font-black mt-1">0</p>
+                    <p class="text-slate-500 mt-3">Best Score: <span id="finalBest">0</span></p>
+                    <button id="playAgain"
+                        class="mt-7 px-7 py-3 rounded-xl bg-cyan-400 text-slate-950 font-bold hover:bg-cyan-300">PLAY
+                        AGAIN</button>
+                </div>
+            </div>
+            <div id="blocks"></div>
+            <div id="base" class="absolute h-7 w-[170px] rounded-lg bg-slate-700"
+                style="left:50%;bottom:20px;transform:translateX(-50%)"></div>
+            <div id="instruction" class="absolute bottom-2 left-0 right-0 text-center text-xs text-slate-500">CLICK /
+                TAP TO PLACE</div>
+        </div>
+
+        <button id="restart"
+            class="w-full mt-4 py-3 rounded-xl bg-slate-900 border border-slate-700 hover:bg-slate-800 font-semibold">Restart</button>
+    </div>
+    <script>
+        const game = document.getElementById("game"), blocks = document.getElementById("blocks");
+        const scoreText = document.getElementById("score"), timerText = document.getElementById("timer"), bestText = document.getElementById("best");
+        const countdown = document.getElementById("countdown"), countNumber = document.getElementById("countNumber"), gameOver = document.getElementById("gameOver");
+        const finalScore = document.getElementById("finalScore"), finalBest = document.getElementById("finalBest"), playAgain = document.getElementById("playAgain"), restart = document.getElementById("restart"), instruction = document.getElementById("instruction");
+        let score = 0, time = 60, best = Number(localStorage.getItem("perfectStackBest")) || 0, gameRunning = false, gameFinished = false, timerInterval = null, currentBlock = null, previousBlock = null;
+        const blockWidth = 170, blockHeight = 28;
+        let stackLevel = 0, speed = 2.5;
+        bestText.textContent = best;
+        function startCountdown() {
+            countdown.classList.remove("hidden");
+            let number = 3;
+            countNumber.textContent = number;
+            const interval = setInterval(() => {
+                number--;
+                if (number > 0) countNumber.textContent = number;
+                else {
+                    countNumber.textContent = "GO!";
+                    setTimeout(() => {
+                        clearInterval(interval);
+                        countdown.classList.add("hidden");
+                        startGame();
+                    }, 500);
+                }
+            }, 1000);
+        }
+        function startGame() {
+            gameRunning = true; gameFinished = false; score = 0; time = 60; stackLevel = 0; speed = 2.5;
+            scoreText.textContent = "0"; timerText.textContent = "60";
+            timerText.classList.remove("text-red-400"); timerText.classList.add("text-cyan-400");
+            instruction.classList.remove("hidden");
+            blocks.innerHTML = "";
+            createBase(); createMovingBlock();
+            timerInterval = setInterval(() => {
+                if (!gameRunning) return;
+                time--; timerText.textContent = time;
+                if (time <= 10) { timerText.classList.remove("text-cyan-400"); timerText.classList.add("text-red-400") }
+                if (time <= 0) endGame();
+            }, 1000);
+        }
+        function createBase() {
+            previousBlock = document.createElement("div");
+            previousBlock.className = "absolute h-7 rounded-lg bg-cyan-400";
+            previousBlock.style.width = blockWidth + "px";
+            previousBlock.style.left = "50%";
+            previousBlock.style.bottom = "20px";
+            previousBlock.style.transform = "translateX(-50%)";
+            blocks.appendChild(previousBlock);
+        }
+        function createMovingBlock() {
+            if (!gameRunning) return;
+            currentBlock = document.createElement("div");
+            currentBlock.className = "moving absolute h-7 rounded-lg bg-purple-400";
+            currentBlock.style.width = blockWidth + "px";
+            currentBlock.style.bottom = 20 + (stackLevel + 1) * blockHeight + "px";
+            currentBlock.style.setProperty("--speed", speed + "s");
+            blocks.appendChild(currentBlock);
+        }
+        function placeBlock() {
+            if (!gameRunning || !currentBlock || !previousBlock) return;
+            currentBlock.classList.remove("moving");
+            const currentRect = currentBlock.getBoundingClientRect(), previousRect = previousBlock.getBoundingClientRect();
+            const currentLeft = currentRect.left, currentRight = currentRect.right, previousLeft = previousRect.left, previousRight = previousRect.right;
+            const overlap = Math.min(currentRight, previousRight) - Math.max(currentLeft, previousLeft);
+            if (overlap <= 0) { endGame(); return }
+            const difference = Math.abs(currentLeft - previousLeft);
+            if (difference <= 12) {
+                score += 2;
+                currentBlock.classList.remove("bg-purple-400");
+                currentBlock.classList.add("bg-yellow-300");
+            } else {
+                score++;
+                currentBlock.classList.remove("bg-purple-400");
+                currentBlock.classList.add("bg-pink-400");
+            }
+            scoreText.textContent = score;
+            const previousCenter = previousRect.left + previousRect.width / 2;
+            const gameRect = game.getBoundingClientRect();
+            const newLeft = previousCenter - gameRect.left;
+            currentBlock.style.left = newLeft + "px";
+            currentBlock.style.transform = "translateX(-50%)";
+            previousBlock = currentBlock;
+            stackLevel++;
+            if (score % 5 === 0) speed = Math.max(0.8, speed - 0.25);
+            setTimeout(() => { if (gameRunning) createMovingBlock() }, 120);
+        }
+        function endGame() {
+            if (gameFinished) return;
+            gameFinished = true; gameRunning = false;
+            clearInterval(timerInterval); timerInterval = null;
+            if (currentBlock) currentBlock.classList.remove("moving");
+            if (score > best) {
+                best = score;
+                localStorage.setItem("perfectStackBest", best);
+            }
+            bestText.textContent = best;
+            finalScore.textContent = score;
+            finalBest.textContent = best;
+            instruction.classList.add("hidden");
+            gameOver.classList.remove("hidden");
+        }
+        function resetGame() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            gameRunning = false; gameFinished = false;
+            blocks.innerHTML = "";
+            score = 0; time = 60; stackLevel = 0; speed = 2.5;
+            currentBlock = null; previousBlock = null;
+            scoreText.textContent = "0"; timerText.textContent = "60";
+            timerText.classList.remove("text-red-400"); timerText.classList.add("text-cyan-400");
+            gameOver.classList.add("hidden");
+            instruction.classList.remove("hidden");
+            startCountdown();
+        }
+        game.addEventListener("pointerdown", event => {
+            event.preventDefault();
+            if (gameRunning) placeBlock();
+        });
+        playAgain.addEventListener("click", resetGame);
+        restart.addEventListener("click", resetGame);
+        startCountdown();
+    </script>
+</body>
+</html>
