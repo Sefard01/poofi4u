@@ -1,353 +1,1451 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Poofi4u - Peaceful Edition</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Poofi4u - Secure Wallet & Admin</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- FontAwesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- QRCode.js library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            jakarta: ['"Plus Jakarta Sans"', 'sans-serif']
-          },
-          keyframes: {
-            gentleShake: {
-              '20%, 60%': {
-                transform: 'translateX(-4px)'
-              },
-              '40%, 80%': {
-                transform: 'translateX(4px)'
-              }
-            }
-          },
-          animation: {
-            'gentle-shake': 'gentleShake 0.4s ease both'
+body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #f7f5f0; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3d3330;
+    padding: 16px;
+    padding-top: 70px;
+}
+
+/* CUSTOM TOAST NOTIFICATION CONTAINER */
+#toastContainer {
+    position: fixed;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+/* Desktop: Bottom Right */
+@media (min-width: 769px) {
+    #toastContainer {
+        bottom: 24px;
+        right: 24px;
+        max-width: 360px;
+        width: 100%;
+    }
+}
+
+/* Mobile: Top Strip */
+@media (max-width: 768px) {
+    #toastContainer {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+    }
+}
+
+.toast-item {
+    background: #2c2422;
+    color: #ffffff;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+@media (max-width: 768px) {
+    .toast-item {
+        transform: translateY(-20px);
+    }
+}
+
+.toast-item.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-item.success { background: #2f4f36; border-color: #4a7c59; }
+.toast-item.error { background: #5c2c2a; border-color: #d9534f; }
+.toast-item.warning { background: #5c4728; border-color: #e5c494; }
+
+.toast-close-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px;
+}
+.toast-close-btn:hover { color: #ffffff; }
+
+/* NAVBAR */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: rgba(248, 247, 244, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    border-bottom: 1px solid #e8e3d9;
+}
+
+.nav-brand {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2c2422;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-setting-icon-btn {
+    border: 2px solid #dcd6cd;
+    background: #ffffff;
+    color: #1f1a18;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.nav-setting-icon-btn:active {
+    transform: scale(0.92);
+    background: #f7f5f0;
+}
+
+/* SIDE PANEL / DRAWER */
+.side-panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(60, 55, 50, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.side-panel-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.side-panel {
+    position: fixed;
+    top: 0;
+    right: -320px;
+    width: 300px;
+    height: 100%;
+    background: #ffffff;
+    border-left: 2px solid #eae5dc;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.08);
+    z-index: 2001;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 20px;
+}
+
+.side-panel.show {
+    right: 0;
+}
+
+.side-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0ece4;
+    padding-bottom: 12px;
+}
+
+.side-panel-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2c2422;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.close-panel-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #5c5350;
+    padding: 4px;
+}
+
+.side-panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+}
+
+.panel-user-card {
+    background: #f7f5f0;
+    border: 2px solid #e8e3d9;
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.panel-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.panel-item-btn {
+    background: #ffffff;
+    border: 2px solid #e2ddd5;
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #3d3330;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.panel-item-btn:active {
+    background: #f7f5f0;
+    transform: scale(0.98);
+}
+
+/* GAME WINDOW */
+.game {
+    position: relative;
+    z-index: 5;
+    width: 100%;
+    max-width: 540px;
+    padding: 20px 16px;
+    background: #ffffff;
+    border: 2px solid #eae5dc;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border-radius: 24px;
+    margin: auto;
+}
+
+.game.danger-flash {
+    border-color: #d9534f !important;
+    animation: gentle-shake 0.4s ease both;
+    box-shadow: 0 0 20px rgba(217, 83, 79, 0.3);
+}
+
+@keyframes gentle-shake {
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 14px;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.control-group span {
+    color: #5c5350;
+    font-weight: 600;
+}
+
+.disk-select-display {
+    background: #f7f5f0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 2px solid #e8e3d9;
+    font-weight: 700;
+    color: #3d3330;
+    font-size: 14px;
+}
+
+button {
+    border: 2px solid #dcd6cd;
+    background: #ffffff;
+    color: #3d3330;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+button:active {
+    transform: scale(0.95);
+    background: #f7f5f0;
+}
+
+.reset-btn {
+    background: #eef3ef;
+    color: #2f4f36;
+    border-color: #b5c9b8;
+}
+
+.solve-btn {
+    background: #fdf3e7;
+    color: #8c5d19;
+    border-color: #e5c494;
+}
+
+/* BOARD */
+.board {
+    height: 220px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 8px;
+    padding: 0 8px;
+    background: #faf8f5;
+    border-radius: 18px;
+    border: 2px solid #f0ece4;
+}
+
+.tower {
+    position: relative;
+    width: 32%;
+    height: 160px;
+    cursor: pointer;
+    padding: 5px;
+    touch-action: none;
+}
+
+.tower::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: #c8c0b4;
+    bottom: 0;
+    left: 0;
+    border-radius: 4px;
+}
+
+.tower::after {
+    content: "";
+    position: absolute;
+    width: 5px;
+    height: 140px;
+    background: #c8c0b4;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    border-radius: 4px;
+}
+
+.tower-label-text {
+    position: absolute;
+    bottom: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 700;
+    color: #5c5350;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #ffffff;
+    padding: 3px 8px;
+    border: 2px solid #e8e3d9;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.disks {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 140px;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: flex-start;
+    z-index: 2;
+}
+
+.disk {
+    height: 24px;
+    margin-top: 3px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2c2422;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: grab;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    touch-action: none;
+}
+
+.disk-1 { width: 48px; background: #d8e8dc; border: 2px solid #a8c9b2; }
+.disk-2 { width: 72px; background: #c6d9cd; border: 2px solid #94b8a2; }
+.disk-3 { width: 96px; background: #f2e2d8; border: 2px solid #dfbea9; }
+.disk-4 { width: 120px; background: #faebd9; border: 2px solid #ebd0b2; }
+.disk-5 { width: 144px; background: #dce6ef; border: 2px solid #abc1d4; }
+
+.footer-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 45px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b605c;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.disk.selected-disk {
+    transform: translateY(-8px);
+    border-color: #3d3330 !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    z-index: 10;
+}
+
+/* MODALS */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(60, 55, 50, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    padding: 16px;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-card {
+    background: #ffffff;
+    border: 2px solid #eae5dc;
+    padding: 24px 20px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 380px;
+}
+
+/* ADMIN DASHBOARD MODAL STYLES */
+.admin-modal-card {
+    background: #ffffff;
+    border: 2px solid #eae5dc;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 950px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #f0ece4;
+    padding-bottom: 10px;
+}
+
+.admin-body {
+    display: flex;
+    gap: 15px;
+    overflow-y: auto;
+    flex: 1;
+    text-align: left;
+}
+
+@media(max-width: 768px) {
+    .admin-body {
+        flex-direction: column;
+    }
+}
+
+.admin-section {
+    flex: 1;
+    background: #faf8f5;
+    border: 2px solid #f0ece4;
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-section h3 {
+    font-size: 15px;
+    margin-bottom: 10px;
+    color: #2c2422;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.data-table th, .data-table td {
+    padding: 8px;
+    border-bottom: 1px solid #e8e3d9;
+    text-align: left;
+}
+
+.data-table th {
+    background: #ede6dc;
+    color: #2c2422;
+    font-weight: 700;
+}
+
+.request-card {
+    background: #ffffff;
+    border: 2px solid #e8e3d9;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.request-card p {
+    margin-bottom: 4px;
+    color: #5c5350;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e2ddd5;
+    border-radius: 10px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    margin-bottom: 12px;
+    outline: none;
+}
+
+#qrcodeContainer {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+#qrcodeContainer img {
+    border-radius: 8px;
+    border: 4px solid #f7f5f0;
+}
+</style>
+
+<!-- Firebase Realtime Database SDK Imports -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+  import { getDatabase, ref, get, set, update, child } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD6ayD5yL-M2T1VclfeBynBytzHFLl0ZfI",
+    authDomain: "poofi4u.firebaseapp.com",
+    databaseURL: "https://poofi4u-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "poofi4u",
+    storageBucket: "poofi4u.firebasestorage.app",
+    messagingSenderId: "80210876933",
+    appId: "1:80210876933:web:a049d22b1a58e2308f9a6c"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const googleProvider = new GoogleAuthProvider();
+
+  // Yahan apni Admin emails ki list daalein jo dashboard access kar payengi
+  const ADMIN_EMAILS = ["your-admin-email@gmail.com", "himanshu@gmail.com"];
+
+  window.firebaseAuth = auth;
+  window.firebaseDb = db;
+  window.googleProvider = googleProvider;
+  window.signInWithPopup = signInWithPopup;
+  window.signOut = signOut;
+  window.dbRef = ref;
+  window.dbGet = get;
+  window.dbSet = set;
+  window.dbUpdate = update;
+  window.dbChild = child;
+
+  onAuthStateChanged(auth, async (user) => {
+      const panelProfileName = document.getElementById("panelProfileName");
+      const adminPanelBtn = document.getElementById("adminPanelBtn");
+
+      if (user) {
+          document.getElementById("authBtnText").textContent = "Logout";
+          document.getElementById("authIcon").className = "fa-solid fa-right-from-bracket";
+          
+          panelProfileName.textContent = user.displayName ? user.displayName : "User";
+
+          // Check if logged in user is Admin
+          if (user.email && ADMIN_EMAILS.includes(user.email)) {
+              adminPanelBtn.style.display = "flex";
+          } else {
+              adminPanelBtn.style.display = "none";
           }
-        }
-      }
-    }
-  </script>
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" >
-</head>
-<body class="min-h-screen overflow-hidden font-jakarta bg-[#f7f5f0] flex items-center justify-center text-[#4a4543]">
-
-  <!-- NAVBAR -->
-  <nav class="fixed top-0 left-0 w-screen flex justify-between items-center px-8 py-4 bg-[rgba(247,245,240,0.85)] backdrop-blur-[10px] border-b border-[rgba(215,210,200,0.6)] z-[1000]">
-    <div class="text-base font-semibold text-[#5c5350] tracking-[0.5px]">
-      <i class="fa-solid fa-leaf text-[#6c8072]"></i> Poofi4u</div>
-    <div class="relative">
-      <button id="settingBtn" class="border border-[#dcd6cd] bg-white text-[#6b625e] px-[14px] py-[7px] rounded-[20px] cursor-pointer text-[13px] font-jakarta transition-all duration-200 flex items-center gap-[7px] shadow-[0_2px_6px_rgba(0,0,0,0.02)] hover:bg-[#f2ece4] hover:border-[#cbc3b7]">
-        <i class="fa-solid fa-gear"></i> Settings </button>
-      <div id="dropdownMenu" class="absolute right-0 top-[45px] bg-white border border-[#e2ddd5] rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.05)] w-[150px] hidden flex-col p-[6px] z-[1001]">
-        <button onclick="openPayment()" class="bg-transparent border-none text-left px-3 py-2 text-[13px] font-jakarta text-[#5c5350] rounded-lg cursor-pointer flex items-center gap-[9px] transition-colors hover:bg-[#f7f5f0]" >
-          <i class="fa-solid fa-wallet"></i> Payment</button>
-      </div>
-    </div>
-  </nav>
-  <!-- GAME WINDOW -->
-  <div id="game" class="relative z-[5] w-[620px] max-w-[92vw] p-8 bg-white border border-[#eae5dc] shadow-[0_20px_40px_rgba(110,100,90,0.06)] rounded-[24px] transition-colors duration-300">
-    <!-- HEADER BAR -->
-    <div class="flex justify-between items-center mb-6 text-[13px]">
-      <!-- Disk Controls -->
-      <div class="flex items-center gap-[10px]">
-        <span class="text-[#7a706b] font-medium"> Disks:</span>
-        <div id="diskCount" class="bg-[#f7f5f0] px-3 py-1 rounded-lg border border-[#e8e3d9] font-semibold text-[#5c5350]">
-          3</div>
-        <button onclick="removeDisk()" class="border border-[#dcd6cd] bg-white text-[#6b625e] px-3 py-[6px] rounded-[10px] cursor-pointer text-[13px] font-jakarta transition-all duration-200 flex items-center gap-[6px] shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:bg-[#f7f5f0] hover:border-[#cbc3b7]" >
-          <i class="fa-solid fa-minus"></i>
-        </button>
-        <button onclick="addDisk()" class="border border-[#dcd6cd] bg-white text-[#6b625e] px-3 py-[6px] rounded-[10px] cursor-pointer text-[13px] font-jakarta transition-all duration-200 flex items-center gap-[6px] shadow-[0_1px_3px_rgba(0,0,0,0.01)] hover:bg-[#f7f5f0] hover:border-[#cbc3b7]">
-          <i class="fa-solid fa-plus"></i>
-        </button>
-      </div>
-      <!-- Moves -->
-      <div class="flex items-center gap-[10px]">
-        <span id="movesText" class="text-[#7a706b] font-medium" > Moves: 0 </span>
-      </div>
-      <!-- Restart -->
-      <div class="flex items-center gap-[10px]">
-        <button onclick="resetGame()" class="bg-[#6c8072] text-white border border-[#6c8072] px-3 py-[6px] rounded-[10px] cursor-pointer text-[13px] font-jakarta transition-all duration-200 flex items-center gap-[6px] hover:bg-[#5b6d60]" >
-          <i class="fa-solid fa-rotate-right"></i> Restart</button>
-      </div>
-    </div>
-    <!-- BOARD -->
-    <div class="h-[190px] flex items-end justify-around gap-4 px-4 bg-[#faf8f5] rounded-2xl border border-[#f0ece4]">
-      <!-- TOWER 1 -->
-      <div data-tower="0" class="relative w-[30%] h-[150px] cursor-pointer before:content-[''] before:absolute before:w-full before:h-[3px] before:bg-[#dcd6cd] before:bottom-0 before:left-0 before:rounded-[3px] after:content-[''] after:absolute after:w-[3px] after:h-[130px] after:bg-[#dcd6cd] after:left-1/2 after:bottom-0 after:-translate-x-1/2 after:rounded-[3px]">
-        <div class="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-medium text-[#7a706b] whitespace-nowrap flex items-center gap-[6px] bg-white px-[10px] py-[2px] border border-[#e8e3d9] rounded-xl shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
-          <i class="fa-solid fa-user text-[#8c7a6b]"></i>me</div>
-        <div class="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-full h-[130px] flex flex-col-reverse items-center justify-start z-[2]" ></div>
-      </div>
-      <!-- TOWER 2 -->
-      <div data-tower="1" class="relative w-[30%] h-[150px] cursor-pointer before:content-[''] before:absolute before:w-full before:h-[3px] before:bg-[#dcd6cd] before:bottom-0 before:left-0 before:rounded-[3px] after:content-[''] after:absolute after:w-[3px] after:h-[130px] after:bg-[#dcd6cd] after:left-1/2 after:bottom-0 after:-translate-x-1/2 after:rounded-[3px]">
-        <div class="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-medium text-[#7a706b] whitespace-nowrap flex items-center gap-[6px] bg-white px-[10px] py-[2px] border border-[#e8e3d9] rounded-xl shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
-          <i class="fa-solid fa-heart text-[#c48b8b]"></i> poofi4u </div>
-        <div  class="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-full h-[130px] flex flex-col-reverse items-center justify-start z-[2]"></div>
-      </div>
-      <!-- TOWER 3 -->
-      <div data-tower="2" class="relative w-[30%] h-[150px] cursor-pointer before:content-[''] before:absolute before:w-full before:h-[3px] before:bg-[#dcd6cd] before:bottom-0 before:left-0 before:rounded-[3px] after:content-[''] after:absolute after:w-[3px] after:h-[130px] after:bg-[#dcd6cd] after:left-1/2 after:bottom-0 after:-translate-x-1/2 after:rounded-[3px]">
-        <div class="absolute -bottom-7 left-1/2 -translate-x-1/2 text-xs font-medium text-[#7a706b] whitespace-nowrap flex items-center gap-[6px] bg-white px-[10px] py-[2px] border border-[#e8e3d9] rounded-xl shadow-[0_2px_4px_rgba(0,0,0,0.02)]" >
-          <i class="fa-solid fa-seedling text-[#6c8072]"></i> someoneloved
-        </div>
-        <div class="absolute bottom-[3px] left-1/2 -translate-x-1/2 w-full h-[130px] flex flex-col-reverse items-center justify-start z-[2]"></div>
-      </div>
-    </div>
-    <!-- FOOTER -->
-    <div class="flex justify-between items-center mt-10 text-[13px] text-[#8c827c]">
-      <div id="message"> Click a token to begin your journey. </div>
-      <div id="minMovesText">  Min Moves: 7</div>
-    </div>
-  </div>
-  <!-- GUIDE ARROW -->
-  <svg id="guideArrow" aria-hidden="true" class="fixed inset-0 w-screen h-screen pointer-events-none z-[100] hidden text-[#8c7a6b]" >
-    <defs>
-      <marker id="arrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto" >
-        <polygon points="0 1, 8 4, 0 7" fill="currentColor" ></polygon>
-      </marker>
-    </defs>
-    <path id="guidePath" d="M 0 0 Q 0 0 0 0" marker-end="url(#arrowHead)" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="4 6"  opacity="0.6" ></path>
-  </svg>
-
-  <!-- VICTORY MODAL -->
-  <div id="victoryModal" class="fixed inset-0 bg-[rgba(90,85,80,0.3)] backdrop-blur-[4px] hidden items-center justify-center z-[10000] opacity-0 pointer-events-none transition-opacity duration-300">
-    <div  class="bg-white border border-[#eae5dc] p-8 rounded-[20px] text-center shadow-[0_20px_40px_rgba(0,0,0,0.08)] w-[320px]">
-      <h2  class="text-[18px] text-[#5c5350] mb-[6px] font-semibold" > Harmony Achieved </h2>
-      <p id="victoryText" class="text-[13px] text-[#8c827c] mb-6">You finished the puzzle. </p>
-      <button onclick="closeVictoryModal()" class="border border-[#dcd6cd] bg-white text-[#6b625e] px-3 py-[6px] rounded-[10px] cursor-pointer text-[13px] font-jakarta transition-all duration-200 inline-flex items-center gap-[6px] hover:bg-[#f7f5f0] hover:border-[#cbc3b7]">
-        <i class="fa-solid fa-play"></i> Play Again</button>
-    </div>
-  </div>
-  <script>
-    const settingBtn = document.getElementById("settingBtn");
-    const dropdownMenu = document.getElementById("dropdownMenu");
-    settingBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      dropdownMenu.classList.toggle("hidden");
-      dropdownMenu.classList.toggle("flex");
-    });
-    window.addEventListener("click", () => {
-      dropdownMenu.classList.add("hidden");
-      dropdownMenu.classList.remove("flex");
-    });
-    function openPayment() {
-      alert("Opening payment gateway...");
-    }
-    // GAME VARIABLES
-    let numberOfDisks = 3;
-    const MIN_DISKS = 1;
-    const MAX_DISKS = 5;
-    let towers = [[], [], []];
-    let selectedTower = null;
-    let moves = 0;
-    // START GAME
-    function startGame() {
-      towers = [[], [], []];
-      selectedTower = null;
-      moves = 0;
-      for (
-        let disk = numberOfDisks;
-         disk >= 1; 
-         disk--
-      ) { towers[0].push(disk);}
-      updateUI();
-    }
-    // UPDATE UI
-    function updateUI() {
-      const towerElements = document.querySelectorAll("[data-tower]");
-      towerElements.forEach((towerElement, towerIndex) => {
-          const container = towerElement.querySelector(".absolute.bottom-\\[3px\\]");
-          container.innerHTML = "";
-          towers[towerIndex].forEach((disk, diskIndex) => {
-              const element = document.createElement("div");
-              element.className = "h-5 mt-[3px] rounded-lg flex items-center justify-center text-[#5c5350] text-[11px] font-semibold cursor-pointer shadow-[0_2px_4px_rgba(0,0,0,0.03)] transition-transform duration-200 hover:-translate-y-0.5";
-              const diskStyles = {
-                1:"w-12 bg-[#e3ede6] border border-[#c7d9cc]",
-                2:"w-[72px] bg-[#d7e4db] border border-[#b7ccbf]",
-                3:"w-24 bg-[#f2e6df] border border-[#e2cbc0]",
-                4: "w-[120px] bg-[#faede3] border border-[#ecd5c4]",
-                5: "w-36 bg-[#e6edf2] border border-[#cbd7e2]"
+          
+          const userRef = ref(db, 'users/' + user.uid);
+          const snapshot = await get(userRef);
+          
+          if (!snapshot.exists()) {
+              const initialData = {
+                  uid: user.uid,
+                  name: user.displayName || "User",
+                  email: user.email || "",
+                  tokens: 50,
+                  createdAt: Date.now()
               };
-              element.className += " " + diskStyles[disk];
-              element.textContent = disk;
-              const isTopDisk = diskIndex === towers[towerIndex].length - 1;
-              if (selectedTower === towerIndex && isTopDisk) {
-                element.classList.add("!-translate-y-[6px]",  "!border-[#8c7a6b]", "!shadow-[0_6px_12px_rgba(0,0,0,0.08)]",  "!z-[10]");
-              }
-              container.appendChild(element);
-            }
-          );
-        }
-      );
-      document.getElementById("movesText").textContent = "Moves: " + moves;
-      document.getElementById("diskCount").textContent = numberOfDisks;
-      document.getElementById("minMovesText").textContent = "Min Moves: " + (Math.pow(2, numberOfDisks) - 1);
-      updateGuideArrow();
-    }
-    // TOWER CLICK
-    document.querySelectorAll("[data-tower]").forEach(tower => {
-        tower.addEventListener("click",() => {
-            const index = Number(tower.dataset.tower);
-            handleTowerClick(index);
+              await set(userRef, initialData);
+              updateTokenUI(50);
+          } else {
+              const userData = snapshot.val();
+              updateTokenUI(userData.tokens || 0);
           }
-        );
-      });
-    // HANDLE TOWER
-    function handleTowerClick(index) {
-      if (selectedTower === null) {
+      } else {
+          document.getElementById("authBtnText").textContent = "Google Login";
+          document.getElementById("authIcon").className = "fa-solid fa-right-to-bracket";
+          panelProfileName.textContent = "Not Logged In";
+          adminPanelBtn.style.display = "none";
+          updateTokenUI(0);
+      }
+  });
+</script>
+</head>
+<body>
+
+<!-- Toast Container for Custom Notifications -->
+<div id="toastContainer"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="nav-brand"><i class="fa-solid fa-seedling" style="color: #4a7c59;"></i> Poofi4u</div>
+    <button class="nav-setting-icon-btn" id="openSidePanelBtn" title="Settings & Menu"><i class="fa-solid fa-gear"></i></button>
+</nav>
+
+<!-- SIDE PANEL / DRAWER -->
+<div class="side-panel-overlay" id="sidePanelOverlay"></div>
+<div class="side-panel" id="sidePanel">
+    <div class="side-panel-header">
+        <h3><i class="fa-solid fa-sliders"></i> Menu & Settings</h3>
+        <button class="close-panel-btn" id="closeSidePanelBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="side-panel-content">
+        <!-- User Info Card inside panel -->
+        <div class="panel-user-card">
+            <div class="panel-info-row">
+                <span><i class="fa-solid fa-user-circle"></i> <span id="panelProfileName">Not Logged In</span></span>
+            </div>
+            <div class="panel-info-row" style="border-top: 1px solid #e8e3d9; padding-top: 6px; margin-top: 2px;">
+                <span><i class="fa-solid fa-coins" style="color: #e5c494;"></i> Balance</span>
+                <span style="font-weight: 700; color: #8c5d19;"><span id="tokenCount">0</span> Tokens</span>
+            </div>
+        </div>
+
+        <button class="panel-item-btn" onclick="handleAuthClick()"><i id="authIcon" class="fa-solid fa-right-to-bracket" style="width: 20px;"></i> <span id="authBtnText">Google Login</span></button>
+        <button class="panel-item-btn" onclick="openPaymentModal()"><i class="fa-solid fa-wallet" style="width: 20px; color: #4a7c59;"></i> Wallet / Transfer</button>
+        <button class="panel-item-btn" id="adminPanelBtn" onclick="openAdminDashboard()" style="display:none; color: #8c5d19; font-weight: 700;"><i class="fa-solid fa-gauge-high" style="width: 20px;"></i> Admin Dashboard</button>
+    </div>
+</div>
+
+<!-- GAME WINDOW -->
+<div class="game" id="game">
+    <div class="header-bar">
+        <div class="control-group">
+            <span>Rings:</span>
+            <div class="disk-select-display" id="diskCount">3</div>
+            <button onclick="removeDisk()" title="Decrease rings"><i class="fa-solid fa-minus"></i></button>
+            <button onclick="addDisk()" title="Increase rings"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div class="control-group">
+            <span id="movesText" style="font-size: 15px; font-weight: 700;">Moves: 0</span>
+        </div>
+        <div class="control-group">
+            <button onclick="autoSolve()" class="solve-btn" title="Auto Solve Puzzle"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+            <button onclick="resetGame()" class="reset-btn" title="Restart Game"><i class="fa-solid fa-rotate-right"></i></button>
+        </div>
+    </div>
+
+    <div class="board">
+        <div class="tower" data-tower="0">
+            <div class="tower-label-text"><i class="fa-solid fa-user" style="color: #6b5c54;"></i> Start</div>
+            <div class="disks"></div>
+        </div>
+        <div class="tower" data-tower="1">
+            <div class="tower-label-text"><i class="fa-solid fa-heart" style="color: #c48b8b;"></i> Middle</div>
+            <div class="disks"></div>
+        </div>
+        <div class="tower" data-tower="2">
+            <div class="tower-label-text"><i class="fa-solid fa-flag-checkered" style="color: #4a7c59;"></i> Goal</div>
+            <div class="disks"></div>
+        </div>
+    </div>
+
+    <div class="footer-bar">
+        <div id="message">Tap or drag any top ring to move it.</div>
+        <div id="minMovesText">Min: 7</div>
+    </div>
+</div>
+
+<!-- Victory Modal -->
+<div class="modal-overlay" id="victoryModal">
+    <div class="modal-card">
+        <h2>🎉 Wonderful!</h2>
+        <p id="victoryText">You successfully completed the puzzle.</p>
+        <button onclick="closeVictoryModal()" style="width: 100%; justify-content: center; background: #4a7c59; color: white; border-color: #4a7c59;"><i class="fa-solid fa-play"></i> Play Again</button>
+    </div>
+</div>
+
+<!-- Wallet Send & Receive Modal -->
+<div class="modal-overlay" id="paymentModal">
+    <div class="modal-card">
+        <h2><i class="fa-solid fa-wallet"></i> Wallet Management</h2>
+        
+        <div class="modal-tabs" style="display:flex; gap:6px; margin: 12px 0;">
+            <button class="tab-btn active" id="sendTabBtn" onclick="switchTab('send')" style="flex:1;">Send (Buy)</button>
+            <button class="tab-btn" id="receiveTabBtn" onclick="switchTab('receive')" style="flex:1;">Receive</button>
+        </div>
+
+        <div class="tab-content active" id="sendTabContent">
+            <p>Pay amount (₹10 = 10 Tokens)</p>
+            <input type="number" id="customAmount" class="modal-input" placeholder="Enter amount in ₹" value="50" oninput="updatePaymentUI()">
+            
+            <div id="qrcodeContainer"></div>
+            <p style="font-size: 11px; margin-top: 4px; margin-bottom: 8px;">Scan via GPay / PhonePe / Paytm</p>
+
+            <div id="mobilePaymentArea" style="display:none; margin-bottom: 12px;">
+                <a id="upiLinkBtn" href="#" target="_blank" style="display: block; width: 100%; padding: 10px; background: #4a7c59; color: white; text-decoration: none; border-radius: 10px; font-weight: 700; text-align: center; font-size: 13px;">
+                    <i class="fa-solid fa-mobile-screen"></i> Click to Pay Direct in App
+                </a>
+            </div>
+
+            <input type="text" id="utrInput" class="modal-input" placeholder="Enter UPI UTR / Transaction ID">
+            <button onclick="verifyAndClaimTokens()" style="width: 100%; justify-content: center; background: #4a7c59; color: white; border-color: #4a7c59; margin-bottom: 8px;">Claim Tokens Instantly</button>
+        </div>
+
+        <div class="tab-content" id="receiveTabContent" style="display:none;">
+            <p>Redeem tokens to UPI (1 Token = ₹1)</p>
+            <input type="number" id="redeemTokensInput" class="modal-input" placeholder="Enter tokens to redeem" value="50" oninput="updateRedeemInfo()">
+            <input type="text" id="upiIdInput" class="modal-input" placeholder="Enter UPI ID or Mobile Number">
+            <p style="font-size: 11px; color: #8c5d19; margin-bottom: 12px;" id="redeemInfoText">You will receive: ₹50 within 1-30 mins</p>
+            <button onclick="requestRedemption()" style="width: 100%; justify-content: center; background: #8c5d19; color: white; border-color: #8c5d19; margin-bottom: 8px;">Request Withdrawal</button>
+        </div>
+
+        <button onclick="closePaymentModal()" style="width: 100%; justify-content: center;">Close</button>
+    </div>
+</div>
+
+<!-- Admin Dashboard Modal -->
+<div class="modal-overlay" id="adminModal">
+    <div class="admin-modal-card">
+        <div class="admin-header">
+            <h2><i class="fa-solid fa-gauge-high"></i> Admin Dashboard</h2>
+            <button onclick="closeAdminDashboard()" style="padding: 4px 10px;">Close</button>
+        </div>
+        <div class="admin-body">
+            <div class="admin-section">
+                <h3><i class="fa-solid fa-users"></i> Users & Recharges</h3>
+                <input type="text" id="adminSearchInput" class="modal-input" placeholder="Filter by Name..." oninput="filterAdminData()" style="margin-bottom: 8px; padding: 6px 10px;">
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Amount</th>
+                                <th>UTR</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminRechargeTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <h3><i class="fa-solid fa-money-bill-transfer"></i> Withdrawal Requests</h3>
+                <div id="adminRedeemContainer" style="overflow-y: auto; max-height: 320px;">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// CUSTOM TOAST NOTIFICATION SYSTEM (Replaces alert)
+function showToast(message, type = 'info') {
+    const container = document.getElementById("toastContainer");
+    
+    const toast = document.createElement("div");
+    toast.className = `toast-item ${type}`;
+    
+    let icon = "fa-circle-info";
+    if(type === 'success') icon = "fa-circle-check";
+    if(type === 'error') icon = "fa-triangle-exclamation";
+    if(type === 'warning') icon = "fa-circle-exclamation";
+
+    toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid ${icon}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="toast-close-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+    `;
+
+    container.appendChild(toast);
+
+    // Smooth entry
+    setTimeout(() => {
+        toast.classList.add("show");
+    }, 10);
+
+    // Swipe to dismiss & Auto close after 5 seconds
+    let startX = 0;
+    toast.addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; });
+    toast.addEventListener("touchmove", (e) => {
+        let diff = e.touches[0].clientX - startX;
+        if(Math.abs(diff) > 50) {
+            toast.style.transform = `translateX(${diff}px)`;
+            toast.style.opacity = "0.5";
+        }
+    });
+    toast.addEventListener("touchend", (e) => {
+        let diff = e.changedTouches[0].clientX - startX;
+        if(Math.abs(diff) > 100) {
+            toast.remove();
+        } else {
+            toast.style.transform = "";
+            toast.style.opacity = "1";
+        }
+    });
+
+    const autoCloseTimer = setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+
+    toast.querySelector(".toast-close-btn").addEventListener("click", () => {
+        clearTimeout(autoCloseTimer);
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+    });
+}
+
+// Side Panel Toggle Logic
+const openSidePanelBtn = document.getElementById("openSidePanelBtn");
+const closeSidePanelBtn = document.getElementById("closeSidePanelBtn");
+const sidePanel = document.getElementById("sidePanel");
+const sidePanelOverlay = document.getElementById("sidePanelOverlay");
+
+openSidePanelBtn.addEventListener("click", () => {
+    sidePanel.classList.add("show");
+    sidePanelOverlay.classList.add("show");
+});
+
+closeSidePanelBtn.addEventListener("click", closeSidePanel);
+sidePanelOverlay.addEventListener("click", closeSidePanel);
+
+function closeSidePanel() {
+    sidePanel.classList.remove("show");
+    sidePanelOverlay.classList.remove("show");
+}
+
+function handleAuthClick() {
+    const user = window.firebaseAuth.currentUser;
+    if (user) {
+        window.signOut(window.firebaseAuth).then(() => {
+            showToast("Logged out successfully.", "success");
+            closeSidePanel();
+        });
+    } else {
+        window.signInWithPopup(window.firebaseAuth, window.googleProvider).then(() => {
+            showToast("Logged in successfully!", "success");
+            closeSidePanel();
+        }).catch((error) => {
+            console.error("Login failed", error);
+            showToast("Login failed. Check authorized domains.", "error");
+        });
+    }
+}
+
+function updateTokenUI(tokens) {
+    document.getElementById("tokenCount").textContent = tokens;
+}
+
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+let qrCodeInstance = null;
+
+function openPaymentModal() {
+    const user = window.firebaseAuth.currentUser;
+    if (!user) {
+        showToast("Please login with Google first!", "warning");
+        return;
+    }
+    closeSidePanel();
+    document.getElementById("paymentModal").classList.add("show");
+    
+    if (isMobileDevice()) {
+        document.getElementById("mobilePaymentArea").style.display = "block";
+    } else {
+        document.getElementById("mobilePaymentArea").style.display = "none";
+    }
+    updatePaymentUI();
+}
+
+function closePaymentModal() {
+    document.getElementById("paymentModal").classList.remove("show");
+    document.getElementById("utrInput").value = "";
+    document.getElementById("upiIdInput").value = "";
+}
+
+function switchTab(tab) {
+    const sendTabBtn = document.getElementById("sendTabBtn");
+    const receiveTabBtn = document.getElementById("receiveTabBtn");
+    const sendContent = document.getElementById("sendTabContent");
+    const receiveContent = document.getElementById("receiveTabContent");
+
+    if (tab === 'send') {
+        sendTabBtn.classList.add("active");
+        receiveTabBtn.classList.remove("active");
+        sendContent.style.display = "block";
+        receiveContent.style.display = "none";
+    } else {
+        receiveTabBtn.classList.add("active");
+        sendTabBtn.classList.remove("active");
+        receiveContent.style.display = "block";
+        sendContent.style.display = "none";
+    }
+}
+
+function updatePaymentUI() {
+    const amount = document.getElementById("customAmount").value || "50";
+    const upiID = "yahan-apni-asli-upi-id-daalein@paytm"; 
+    const payeeName = "Poofi4u";
+    const upiUrl = `upi://pay?pa=${upiID}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR`;
+
+    if (isMobileDevice()) {
+        document.getElementById("upiLinkBtn").href = upiUrl;
+    }
+
+    const qrContainer = document.getElementById("qrcodeContainer");
+    qrContainer.innerHTML = "";
+    qrCodeInstance = new QRCode(qrContainer, {
+        text: upiUrl,
+        width: 130,
+        height: 130,
+        colorDark: "#2c2422",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+}
+
+function updateRedeemInfo() {
+    const tokens = document.getElementById("redeemTokensInput").value || 0;
+    document.getElementById("redeemInfoText").textContent = `You will receive: ₹${tokens} within 1-30 mins`;
+}
+
+async function verifyAndClaimTokens() {
+    const utr = document.getElementById("utrInput").value.trim();
+    const amount = Number(document.getElementById("customAmount").value) || 50;
+    const user = window.firebaseAuth.currentUser;
+
+    if (!user) { showToast("Please login first.", "warning"); return; }
+    if (!utr) { showToast("Please enter UTR / Transaction ID.", "warning"); return; }
+
+    try {
+        const userRef = window.dbRef(window.firebaseDb, 'users/' + user.uid);
+        const snapshot = await window.dbGet(userRef);
+        const currentTokens = snapshot.exists() ? (snapshot.val().tokens || 0) : 0;
+
+        await window.dbUpdate(userRef, {
+            tokens: currentTokens + amount,
+            lastUtr: utr,
+            lastRechargeAmount: amount,
+            lastRechargeDate: new Date().toLocaleString()
+        });
+
+        showToast(`Success! ${amount} Tokens added to your wallet.`, "success");
+        closePaymentModal();
+        updateTokenUI(currentTokens + amount);
+    } catch (error) {
+        console.error("Error:", error);
+        showToast("Failed to claim tokens.", "error");
+    }
+}
+
+async function requestRedemption() {
+    const tokensToRedeem = Number(document.getElementById("redeemTokensInput").value) || 0;
+    const upiId = document.getElementById("upiIdInput").value.trim();
+    const user = window.firebaseAuth.currentUser;
+
+    if (!user) { showToast("Please login first.", "warning"); return; }
+    if (tokensToRedeem <= 0) { showToast("Enter valid tokens to redeem.", "warning"); return; }
+    if (!upiId) { showToast("Enter your UPI ID or Mobile Number.", "warning"); return; }
+
+    try {
+        const userRef = window.dbRef(window.firebaseDb, 'users/' + user.uid);
+        const snapshot = await window.dbGet(userRef);
+        const userData = snapshot.exists() ? snapshot.val() : {};
+        const currentTokens = userData.tokens || 0;
+
+        if (currentTokens < tokensToRedeem) {
+            showToast("You don't have enough tokens in your wallet!", "error");
+            return;
+        }
+
+        await window.dbUpdate(userRef, {
+            tokens: currentTokens - tokensToRedeem,
+            lastRedeemUPI: upiId,
+            lastRedeemAmount: tokensToRedeem,
+            redeemStatus: "Pending",
+            redeemDate: new Date().toLocaleString()
+        });
+
+        showToast(`Redemption request submitted successfully! ₹${tokensToRedeem} will be sent to ${upiId}.`, "success");
+        closePaymentModal();
+        updateTokenUI(currentTokens - tokensToRedeem);
+    } catch (error) {
+        console.error("Error:", error);
+        showToast("Redemption failed.", "error");
+    }
+}
+
+// ADMIN DASHBOARD LOGIC
+let allUsersCache = [];
+
+async function openAdminDashboard() {
+    closeSidePanel();
+    document.getElementById("adminModal").classList.add("show");
+    await fetchAdminData();
+}
+
+function closeAdminDashboard() {
+    document.getElementById("adminModal").classList.remove("show");
+}
+
+async function fetchAdminData() {
+    try {
+        const usersRef = window.dbRef(window.firebaseDb, 'users');
+        const snapshot = await window.dbGet(usersRef);
+        
+        const rechargeTableBody = document.getElementById("adminRechargeTableBody");
+        const redeemContainer = document.getElementById("adminRedeemContainer");
+        
+        rechargeTableBody.innerHTML = "";
+        redeemContainer.innerHTML = "";
+        allUsersCache = [];
+
+        if (!snapshot.exists()) {
+            rechargeTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No data found</td></tr>`;
+            redeemContainer.innerHTML = `<p style="text-align:center;">No requests found</p>`;
+            return;
+        }
+
+        snapshot.forEach((childSnapshot) => {
+            const userData = childSnapshot.val();
+            allUsersCache.push(userData);
+
+            if (userData.lastRechargeAmount) {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><strong>${userData.name || "Unknown"}</strong></td>
+                    <td>₹${userData.lastRechargeAmount}</td>
+                    <td>${userData.lastUtr || "N/A"}</td>
+                    <td>${userData.lastRechargeDate || "N/A"}</td>
+                `;
+                rechargeTableBody.appendChild(tr);
+            }
+
+            if (userData.redeemStatus === "Pending" && userData.lastRedeemAmount) {
+                const card = document.createElement("div");
+                card.className = "request-card";
+                const manualUpiLink = `upi://pay?pa=${userData.lastRedeemUPI}&pn=${encodeURIComponent(userData.name || 'User')}&am=${userData.lastRedeemAmount}&cu=INR`;
+                
+                card.innerHTML = `
+                    <p><strong>Name:</strong> ${userData.name || "Unknown"}</p>
+                    <p><strong>Amount:</strong> ₹${userData.lastRedeemAmount}</p>
+                    <p><strong>UPI/Mobile:</strong> ${userData.lastRedeemUPI}</p>
+                    <p><strong>Date:</strong> ${userData.redeemDate || "N/A"}</p>
+                    <div style="display: flex; gap: 6px; margin-top: 6px;">
+                        <a href="${manualUpiLink}" target="_blank" style="flex:1; background:#4a7c59; color:white; padding:6px; text-decoration:none; border-radius:6px; text-align:center; font-weight:700; font-size:11px;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Pay Manually
+                        </a>
+                        <button onclick="markRedeemComplete('${userData.uid}')" style="background:#eef3ef; color:#2f4f36; border-color:#b5c9b8; padding:6px 10px; font-size:11px;">Approve</button>
+                    </div>
+                `;
+                redeemContainer.appendChild(card);
+            }
+        });
+
+        if (rechargeTableBody.innerHTML === "") {
+            rechargeTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No recharges recorded yet</td></tr>`;
+        }
+        if (redeemContainer.innerHTML === "") {
+            redeemContainer.innerHTML = `<p style="text-align:center; color:#8c5d19; padding: 10px;">No pending withdrawal requests.</p>`;
+        }
+
+    } catch (error) {
+        console.error("Error loading admin data:", error);
+    }
+}
+
+function filterAdminData() {
+    const query = document.getElementById("adminSearchInput").value.toLowerCase();
+    const rechargeTableBody = document.getElementById("adminRechargeTableBody");
+    rechargeTableBody.innerHTML = "";
+
+    const filtered = allUsersCache.filter(u => u.name && u.name.toLowerCase().includes(query) && u.lastRechargeAmount);
+
+    if (filtered.length === 0) {
+        rechargeTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No matching records</td></tr>`;
+        return;
+    }
+
+    filtered.forEach(userData => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><strong>${userData.name}</strong></td>
+            <td>₹${userData.lastRechargeAmount}</td>
+            <td>${userData.lastUtr || "N/A"}</td>
+            <td>${userData.lastRechargeDate || "N/A"}</td>
+        `;
+        rechargeTableBody.appendChild(tr);
+    });
+}
+
+async function markRedeemComplete(uid) {
+    try {
+        const userRef = window.dbRef(window.firebaseDb, 'users/' + uid);
+        await window.dbUpdate(userRef, {
+            redeemStatus: "Completed"
+        });
+        showToast("Marked as Completed!", "success");
+        fetchAdminData();
+    } catch (err) {
+        console.error(err);
+        showToast("Failed to update status.", "error");
+    }
+}
+
+let numberOfDisks = 3;
+const MIN_DISKS = 1;
+const MAX_DISKS = 5;
+let towers = [[], [], []];
+let selectedTower = null;
+let moves = 0;
+let isSolving = false;
+
+function startGame() {
+    if (isSolving) return;
+    towers = [[], [], []];
+    selectedTower = null;
+    moves = 0;
+    for (let disk = numberOfDisks; disk >= 1; disk--) {
+        towers[0].push(disk);
+    }
+    updateUI();
+}
+
+function updateUI() {
+    const towerElements = document.querySelectorAll(".tower");
+    towerElements.forEach((towerElement, towerIndex) => {
+        const container = towerElement.querySelector(".disks");
+        container.innerHTML = "";
+
+        towers[towerIndex].forEach((disk, diskIndex) => {
+            const element = document.createElement("div");
+            element.className = "disk disk-" + disk;
+            element.textContent = disk;
+            element.dataset.disk = disk;
+            element.dataset.tower = towerIndex;
+
+            const isTopDisk = diskIndex === towers[towerIndex].length - 1;
+            if (selectedTower === towerIndex && isTopDisk) {
+                element.classList.add("selected-disk");
+            }
+
+            if (isTopDisk && !isSolving) {
+                addDragListeners(element, towerIndex);
+            }
+
+            container.appendChild(element);
+        });
+    });
+
+    document.getElementById("movesText").textContent = "Moves: " + moves;
+    document.getElementById("diskCount").textContent = numberOfDisks;
+    document.getElementById("minMovesText").textContent = "Min: " + (Math.pow(2, numberOfDisks) - 1);
+}
+
+function addDragListeners(element, towerIndex) {
+    let startX, startY;
+
+    element.addEventListener("pointerdown", (e) => {
+        if (isSolving) return;
+        e.stopPropagation();
+        startX = e.clientX;
+        startY = e.clientY;
+        selectedTower = towerIndex;
+        updateUI();
+
+        const onPointerMove = (moveEvent) => {
+            const dx = moveEvent.clientX - startX;
+            const dy = moveEvent.clientY - startY;
+            element.style.transform = `translate(${dx}px, ${dy}px) translateY(-8px)`;
+            element.style.zIndex = "1000";
+        };
+
+        const onPointerUp = (upEvent) => {
+            window.removeEventListener("pointermove", onPointerMove);
+            window.removeEventListener("pointerup", onPointerUp);
+
+            element.style.transform = "";
+            element.style.zIndex = "";
+
+            const elemBelow = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
+            const targetTowerEl = elemBelow ? elemBelow.closest(".tower") : null;
+
+            if (targetTowerEl) {
+                const targetIndex = Number(targetTowerEl.dataset.tower);
+                if (selectedTower !== null && selectedTower !== targetIndex) {
+                    moveDisk(selectedTower, targetIndex);
+                } else {
+                    selectedTower = null;
+                    updateUI();
+                }
+            } else {
+                selectedTower = null;
+                updateUI();
+            }
+        };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+    });
+}
+
+document.querySelectorAll(".tower").forEach(tower => {
+    tower.addEventListener("click", () => {
+        if (isSolving) return;
+        const index = Number(tower.dataset.tower);
+        handleTowerClick(index);
+    });
+});
+
+function handleTowerClick(index) {
+    if (selectedTower === null) {
         if (towers[index].length === 0) {
-          document.getElementById("message").textContent = "This space is empty.";
-          return;
+            document.getElementById("message").textContent = "Pillar is empty. Choose a ring.";
+            return;
         }
         selectedTower = index;
-        document.getElementById("message").textContent = "Token lifted. Choose your destination.";
+        document.getElementById("message").textContent = "Ring lifted! Tap target pillar.";
         updateUI();
         return;
-      }
-      if (selectedTower === index) {
+    }
+
+    if (selectedTower === index) {
         selectedTower = null;
         document.getElementById("message").textContent = "Selection released.";
         updateUI();
         return;
-      }
-      moveDisk(selectedTower, index);
     }
-    // MOVE DISK
-    function moveDisk(from, to) {
-      const source = towers[from];
-      const destination = towers[to];
-      const disk = source[source.length - 1];
-      const top = destination[destination.length - 1];
-      if (top !== undefined && disk > top) {
+
+    moveDisk(selectedTower, index);
+}
+
+function moveDisk(from, to) {
+    const source = towers[from];
+    const destination = towers[to];
+    const disk = source[source.length - 1];
+    const top = destination[destination.length - 1];
+
+    if (top !== undefined && disk > top) {
         triggerError();
         return;
-      }
-      source.pop();
-      destination.push(disk);
-      moves++;
-      selectedTower = null;
-      document.getElementById("message").textContent = "Placed gently.";
-      updateUI();
-      checkWin();
     }
-    // ERROR
-    function triggerError() {
-      const gameEl = document.getElementById("game");
-      const msgEl = document.getElementById("message");
-      gameEl.classList.add( "border-[#e28a8a]", "animate-gentle-shake");
-      msgEl.textContent = "A larger token cannot rest on a smaller one.";
-      setTimeout(() => {
-        gameEl.classList.remove( "border-[#e28a8a]", "animate-gentle-shake" );
-        msgEl.textContent = "Selection reset.";
+
+    source.pop();
+    destination.push(disk);
+    moves++;
+    selectedTower = null;
+
+    document.getElementById("message").textContent = "Placed smoothly!";
+    updateUI();
+    checkWin();
+}
+
+function triggerError() {
+    const gameEl = document.getElementById("game");
+    const msgEl = document.getElementById("message");
+    gameEl.classList.add("danger-flash");
+    msgEl.textContent = "Larger ring cannot go on smaller one!";
+
+    setTimeout(() => {
+        gameEl.classList.remove("danger-flash");
+        msgEl.textContent = "Try again.";
         selectedTower = null;
         updateUI();
-      }, 600);
+    }, 700);
+}
+
+function checkWin() {
+    const victoryModal = document.getElementById("victoryModal");
+    if (towers[2].length === numberOfDisks) {
+        document.getElementById("victoryText").textContent = `Completed in ${moves} moves!`;
+        victoryModal.classList.add("show");
     }
-    // CHECK WIN
-    function checkWin() {
-      if ( towers[2].length ===numberOfDisks) {
-        const modal = document.getElementById("victoryModal" );
-        document.getElementById( "victoryText").textContent = `Completed peacefully in ${moves} moves.`;
-        modal.classList.remove(  "hidden", "opacity-0", "pointer-events-none");
-        modal.classList.add( "flex",  "opacity-100",  "pointer-events-auto"
-        );
-      }
-    }
-    // RESET
-    function resetGame() {
-      startGame();
-      document.getElementById("message").textContent = "Everything is reset.";
-      const modal = document.getElementById("victoryModal"
-        );
-      modal.classList.add( "hidden", "opacity-0", "pointer-events-none"
-      );
-      modal.classList.remove( "flex", "opacity-100", "pointer-events-auto");
-    }
-    // ADD DISK
-    function addDisk() {
-      if ( numberOfDisks >= MAX_DISKS) {
-        return;
-      }
-      numberOfDisks++;
-      startGame();
-    }
-    // REMOVE DISK
-    function removeDisk() {
-      if ( numberOfDisks <= MIN_DISKS)
-       { return;
-      }
-      numberOfDisks--;
-      startGame();
-    }
-    // CLOSE VICTORY
-    function closeVictoryModal() {
-      const modal =  document.getElementById("victoryModal");
-      modal.classList.add( "hidden", "opacity-0", "pointer-events-none");
-      modal.classList.remove("flex", "opacity-100", "pointer-events-auto");
-      resetGame();
-    }
-    // GUIDE ARROW
-    const guideArrow = document.getElementById( "guideArrow" );
-    const guidePath = document.getElementById("guidePath"
-      );
-    let pointerX =
-      window.innerWidth / 2;
-    let pointerY =
-      window.innerHeight / 2;
-    document.addEventListener( "pointermove",
-      event => {
-        pointerX =  event.clientX;
-        pointerY = event.clientY;
-         updateGuideArrow();
-      },
-      {
-        passive: true
-      }
-    );
-    function updateGuideArrow() {
-      if (selectedTower === null) { guideArrow.classList.add(  "hidden"
-        );
-        return;
-      }
-      const selectedDisk = document.querySelector( ".!-translate-y-\\[6px\\]"
-        );
-      if (!selectedDisk) {
-        guideArrow.classList.add("hidden");
-        return;
-      }
-      const gameRect = document .getElementById("game") .getBoundingClientRect();
-      let targetX = Math.max(gameRect.left + 15, Math.min(pointerX, gameRect.right - 15));
-      let targetY = Math.max( gameRect.top + 15, Math.min(pointerY, gameRect.bottom - 15 ) );
-      const rect = selectedDisk.getBoundingClientRect();
-      const startX = rect.right;
-      const startY = rect.top + rect.height / 2;
-      const dx = targetX - startX;
-      const dy = targetY - startY;
-      const distance = Math.sqrt(dx * dx + dy * dy
-        );
-     if (distance < 25) { 
-        guideArrow.classList.add("hidden" );
-     }
-     else {
-        const gap = 16;
-        const endX = targetX - (dx / distance) * gap;
-        const endY = targetY - (dy / distance) * gap;
-        const controlX = (startX + endX) / 2;
-        const controlY =  Math.min( startY, endY ) - Math.max(25, Math.abs(dx) * 0.1);
-        const pathData = `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`;
-        guidePath.setAttribute("d", pathData );
-        guideArrow.classList.remove(
-          "hidden"
-        );
-      }
-    }
+}
+
+function resetGame() {
+    if (isSolving) return;
     startGame();
-  </script>
+    document.getElementById("message").textContent = "Game restarted.";
+    document.getElementById("victoryModal").classList.remove("show");
+}
+
+function addDisk() {
+    if (isSolving || numberOfDisks >= MAX_DISKS) return;
+    numberOfDisks++;
+    startGame();
+}
+
+function removeDisk() {
+    if (isSolving || numberOfDisks <= MIN_DISKS) return;
+    numberOfDisks--;
+    startGame();
+}
+
+function closeVictoryModal() {
+    document.getElementById("victoryModal").classList.remove("show");
+    resetGame();
+}
+
+function getHanoiMoves(n, from, to, aux, movesList = []) {
+    if (n === 0) return movesList;
+    getHanoiMoves(n - 1, from, aux, to, movesList);
+    movesList.push({ from, to });
+    getHanoiMoves(n - 1, aux, to, from, movesList);
+    return movesList;
+}
+
+function autoSolve() {
+    if (isSolving) return;
+    resetGame();
+    isSolving = true;
+    selectedTower = null;
+    
+    const steps = getHanoiMoves(numberOfDisks, 0, 2, 1);
+    let stepIndex = 0;
+    
+    document.getElementById("message").textContent = "Auto-solving puzzle...";
+
+    const solveInterval = setInterval(() => {
+        if (stepIndex >= steps.length) {
+            clearInterval(solveInterval);
+            isSolving = false;
+            document.getElementById("message").textContent = "Puzzle auto-solved!";
+            return;
+        }
+
+        const move = steps[stepIndex];
+        const source = towers[move.from];
+        const destination = towers[move.to];
+        const disk = source.pop();
+        destination.push(disk);
+        moves++;
+        updateUI();
+        checkWin();
+
+        stepIndex++;
+    }, 500);
+}
+
+startGame();
+</script>
 </body>
 </html>
