@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Poofi4u - Secure Wallet & Admin</title>
+<title>Poofi4u</title>
+<link rel="shortcut icon" href="icon.png" type="image/x-icon">
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- FontAwesome CDN -->
@@ -129,6 +130,10 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+.nav-brand img{
+    height: 2rem;
+    border-radius: 50%;
 }
 
 .nav-setting-icon-btn {
@@ -634,7 +639,7 @@ button:active {
   const googleProvider = new GoogleAuthProvider();
 
   // Yahan apni Admin emails ki list daalein jo dashboard access kar payengi
-  const ADMIN_EMAILS = ["your-admin-email@gmail.com", "himanshu@gmail.com"];
+  const ADMIN_EMAILS = ["himanshusingh9783@gmail.com"];
 
   window.firebaseAuth = auth;
   window.firebaseDb = db;
@@ -698,7 +703,7 @@ button:active {
 
 <!-- NAVBAR -->
 <nav class="navbar">
-    <div class="nav-brand"><i class="fa-solid fa-seedling" style="color: #4a7c59;"></i> Poofi4u</div>
+    <div class="nav-brand"><img src="icon.png" alt="logo"> Poofi4u</div>
     <button class="nav-setting-icon-btn" id="openSidePanelBtn" title="Settings & Menu"><i class="fa-solid fa-gear"></i></button>
 </nav>
 
@@ -706,7 +711,7 @@ button:active {
 <div class="side-panel-overlay" id="sidePanelOverlay"></div>
 <div class="side-panel" id="sidePanel">
     <div class="side-panel-header">
-        <h3><i class="fa-solid fa-sliders"></i> Menu & Settings</h3>
+        <h3><i class="fa-solid fa-sliders"></i>Settings</h3>
         <button class="close-panel-btn" id="closeSidePanelBtn"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="side-panel-content">
@@ -1003,7 +1008,7 @@ function switchTab(tab) {
 
 function updatePaymentUI() {
     const amount = document.getElementById("customAmount").value || "50";
-    const upiID = "yahan-apni-asli-upi-id-daalein@paytm"; 
+    const upiID = "himanshusingh9783@okhdfcbank"; 
     const payeeName = "Poofi4u";
     const upiUrl = `upi://pay?pa=${upiID}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR`;
 
