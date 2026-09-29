@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Poofi4u</title>
+    <link rel="shortcut icon" href="icon.png" type="image/x-icon">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- App styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- Toast Container for Custom Notifications -->
+    <div id="toastContainer"></div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-brand"><img src="icon.png" alt="logo"> Poofi4u</div>
+        <button class="nav-setting-icon-btn" id="openSidePanelBtn" title="Settings & Menu"><i
+                class="fa-solid fa-gear"></i></button>
+    </nav>
+
+    <!-- SIDE PANEL / DRAWER -->
+    <div class="side-panel-overlay" id="sidePanelOverlay"></div>
+    <div class="side-panel" id="sidePanel">
+        <div class="side-panel-header">
+            <h3><i class="fa-solid fa-sliders"></i>Settings</h3>
+            <button class="close-panel-btn" id="closeSidePanelBtn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="side-panel-content">
+            <div class="panel-user-card">
+                <div class="panel-info-row">
+                    <span><i class="fa-solid fa-user-circle"></i> <span id="panelProfileName">Not Logged
+                            In</span></span>
+                </div>
+                <div class="panel-info-row" style="border-top: 1px solid #e8e3d9; padding-top: 6px; margin-top: 2px;">
+                    <span><i class="fa-solid fa-coins" style="color: #e5c494;"></i> Balance</span>
+                    <span style="font-weight: 700; color: #8c5d19;"><span id="tokenCount">0</span> Tokens</span>
+                </div>
+            </div>
+
+            <button class="panel-item-btn" onclick="handleAuthClick()"><i id="authIcon"
+                    class="fa-solid fa-right-to-bracket" style="width: 20px;"></i> <span id="authBtnText">Google
+                    Login</span></button>
+            <button class="panel-item-btn" onclick="openPaymentModal()"><i class="fa-solid fa-wallet"
+                    style="width: 20px; color: #4a7c59;"></i> Wallet / Transfer</button>
+            <button class="panel-item-btn" id="adminPanelBtn" onclick="openAdminDashboard()"
+                style="display:none; color: #8c5d19; font-weight: 700;"><i class="fa-solid fa-gauge-high"
+                    style="width: 20px;"></i> Admin Dashboard</button>
+        </div>
+    </div>
+
+    <!-- GAME WINDOW -->
+    <div class="game" id="game">
+        <div class="header-bar">
+            <div class="control-group">
+                <span>Rings:</span>
+                <div class="disk-select-display" id="diskCount">3</div>
+                <button onclick="removeDisk()" title="Decrease rings"><i class="fa-solid fa-minus"></i></button>
+                <button onclick="addDisk()" title="Increase rings"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <div class="control-group">
+                <span id="movesText" style="font-size: 15px; font-weight: 700;">Moves: 0</span>
+            </div>
+            <div class="control-group">
+                <button onclick="autoSolve()" class="solve-btn" title="Auto Solve Puzzle"><i
+                        class="fa-solid fa-wand-magic-sparkles"></i></button>
+                <button onclick="resetGame()" class="reset-btn" title="Restart Game"><i
+                        class="fa-solid fa-rotate-right"></i></button>
+            </div>
+        </div>
+
+        <div class="board">
+            <div class="tower" data-tower="0">
+                <div class="tower-label-text"><i class="fa-solid fa-user" style="color: #6b5c54;"></i> Start</div>
+                <div class="disks"></div>
+            </div>
+            <div class="tower" data-tower="1">
+                <div class="tower-label-text"><i class="fa-solid fa-heart" style="color: #c48b8b;"></i> Middle</div>
+                <div class="disks"></div>
+            </div>
+            <div class="tower" data-tower="2">
+                <div class="tower-label-text"><i class="fa-solid fa-flag-checkered" style="color: #4a7c59;"></i> Goal
+                </div>
+                <div class="disks"></div>
+            </div>
+        </div>
+
+        <div class="footer-bar">
+            <div id="message">Tap or drag any top ring to move it.</div>
+            <div id="minMovesText">Min: 7</div>
+        </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div class="modal-overlay" id="victoryModal">
+        <div class="modal-card">
+            <h2>🎉 Wonderful!</h2>
+            <p id="victoryText">You successfully completed the puzzle.</p>
+            <button onclick="closeVictoryModal()"
+                style="width: 100%; justify-content: center; background: #4a7c59; color: white; border-color: #4a7c59;"><i
+                    class="fa-solid fa-play"></i> Play Again</button>
+        </div>
+    </div>
+
+    <!-- Wallet Send & Receive Modal -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-card">
+            <h2><i class="fa-solid fa-wallet"></i> Wallet Management</h2>
+
+            <div class="modal-tabs" style="display:flex; gap:6px; margin: 12px 0;">
+                <button class="tab-btn active" id="sendTabBtn" onclick="switchTab('send')" style="flex:1;">Send
+                    (Buy)</button>
+                <button class="tab-btn" id="receiveTabBtn" onclick="switchTab('receive')"
+                    style="flex:1;">Receive</button>
+            </div>
+
+            <div class="tab-content active" id="sendTabContent">
+                <p>Pay amount (₹10 = 10 Tokens)</p>
+                <input type="number" id="customAmount" class="modal-input" placeholder="Enter amount in ₹" value="50"
+                    oninput="updatePaymentUI()">
+
+                <div id="qrcodeContainer"></div>
+                <p style="font-size: 11px; margin-top: 4px; margin-bottom: 8px;">Scan via GPay / PhonePe / Paytm</p>
+
+                <div id="mobilePaymentArea" style="display:none; margin-bottom: 12px;">
+                    <a id="upiLinkBtn" href="#" target="_blank"
+                        style="display: block; width: 100%; padding: 10px; background: #4a7c59; color: white; text-decoration: none; border-radius: 10px; font-weight: 700; text-align: center; font-size: 13px;">
+                        <i class="fa-solid fa-mobile-screen"></i> Click to Pay Direct in App
+                    </a>
+                </div>
+
+                <input type="text" id="utrInput" class="modal-input" placeholder="Enter UPI UTR / Transaction ID">
+                <button onclick="verifyAndClaimTokens()"
+                    style="width: 100%; justify-content: center; background: #4a7c59; color: white; border-color: #4a7c59; margin-bottom: 8px;">Claim
+                    Tokens Instantly</button>
+            </div>
+
+            <div class="tab-content" id="receiveTabContent" style="display:none;">
+                <p>Redeem tokens to UPI (1 Token = ₹1)</p>
+                <input type="number" id="redeemTokensInput" class="modal-input" placeholder="Enter tokens to redeem"
+                    value="50" oninput="updateRedeemInfo()">
+                <input type="text" id="upiIdInput" class="modal-input" placeholder="Enter UPI ID or Mobile Number">
+                <p style="font-size: 11px; color: #8c5d19; margin-bottom: 12px;" id="redeemInfoText">You will receive:
+                    ₹50 within 1-30 mins</p>
+                <button onclick="requestRedemption()"
+                    style="width: 100%; justify-content: center; background: #8c5d19; color: white; border-color: #8c5d19; margin-bottom: 8px;">Request
+                    Withdrawal</button>
+            </div>
+
+            <button onclick="closePaymentModal()" style="width: 100%; justify-content: center;">Close</button>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard Modal -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="admin-modal-card">
+            <div class="admin-header">
+                <h2><i class="fa-solid fa-gauge-high"></i> Admin Dashboard</h2>
+                <button onclick="closeAdminDashboard()" style="padding: 4px 10px;">Close</button>
+            </div>
+            <div class="admin-body">
+                <div class="admin-section">
+                    <h3><i class="fa-solid fa-users"></i> Users & Recharges</h3>
+                    <input type="text" id="adminSearchInput" class="modal-input" placeholder="Filter by Name..."
+                        oninput="filterAdminData()" style="margin-bottom: 8px; padding: 6px 10px;">
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Amount</th>
+                                    <th>UTR</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminRechargeTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-section">
+                    <h3><i class="fa-solid fa-money-bill-transfer"></i> Withdrawal Requests</h3>
+                    <div id="adminRedeemContainer" style="overflow-y: auto; max-height: 320px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/script.js"></script>
+    <!-- PAYMENT: wallet / UPI logic -->
+    <script src="payment/payment.js"></script>
+    <!-- ADMIN: dashboard logic -->
+    <script src="admin/admin.js"></script>
+</body>
+
+</html>
